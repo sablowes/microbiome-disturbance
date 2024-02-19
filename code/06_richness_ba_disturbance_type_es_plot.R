@@ -1,0 +1,234 @@
+source('~/Dropbox/1current/microbiome-disturbance/code/00_init_dirs_load_packages.R')
+
+load(paste0(path2wd, 'model-fits-across/alpha_ba2-7386305.Rdata'))
+
+seed = 123
+
+alpha_ba_dat <- alpha_q0_ba_nbinom_shape$data %>% 
+  as_tibble() 
+
+# aquatic effect sizes from before-after model
+aquatic_ba_ES <- alpha_q0_ba_nbinom_shape %>% 
+  spread_draws(b_before_afterafter, `r_Study:Time_series`[Time_series, term],
+               seed = 123) %>% 
+  filter(term=='before_afterafter') %>% 
+  ungroup() %>% 
+  mutate(Environment = 'Aquatic',
+         before_after = 'after',
+         pop_value = b_before_afterafter, 
+         ts_value = b_before_afterafter + `r_Study:Time_series`) %>% 
+  select(.chain, .iteration, .draw, Environment, Time_series,
+         before_after, pop_value, ts_value) %>% 
+  separate(Time_series, into = c('Study', 'Time_series'), extra = 'merge') %>% 
+  # fix 10 names that are screwing up my code
+  mutate(Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.1Heat.Soil',
+                              'Jurburg_Microcosm.1Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.2Heat.Soil',
+                              'Jurburg_Microcosm.2Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Cip_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip.Pig_feces',
+                              'Jurburg_Pigs.Cip.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Clin_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin.Pig_feces',
+                              'Jurburg_Pigs.Clin.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Grazed',
+                              'Jurburg_Portugal.Drought.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Pristine',
+                              'Jurburg_Portugal.Drought.Pristine', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Grazed',
+                              'Jurburg_Portugal.Flood.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Pristine',
+                              'Jurburg_Portugal.Flood.Pristine', Time_series),
+         # and now fix study name
+         Study = ifelse(Time_series=='Jurburg_Microcosm.1Heat.Soil' |
+                          Time_series=='Jurburg_Microcosm.2Heat.Soil',
+                        'Jurburg_Microcosm', Study),
+         Study = ifelse(Time_series=='Jurburg_Pigs.Cip_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Cip.Pig_feces' | 
+                          Time_series=='Jurburg_Pigs.Clin_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Clin.Pig_feces',
+                        'Jurburg_Pigs', Study),
+         Study = ifelse(Time_series=='Jurburg_Portugal.Drought.Grazed' |
+                          Time_series=='Jurburg_Portugal.Drought.Pristine' | 
+                          Time_series=='Jurburg_Portugal.Flood.Grazed' |
+                          Time_series=='Jurburg_Portugal.Flood.Pristine',
+                        'Jurburg_Portugal', Study)) 
+
+# mammal 
+mammal_ba_ES <- alpha_q0_ba_nbinom_shape %>% 
+  spread_draws(b_before_afterafter, `b_EnvironmentMammal:before_afterafter`,
+               `r_Study:Time_series`[Time_series, term]) %>% 
+  filter(term=='before_afterafter') %>% 
+  ungroup() %>% 
+  mutate(Environment = 'Mammal',
+         before_after = 'after',
+         pop_value = b_before_afterafter + 
+           `b_EnvironmentMammal:before_afterafter`,
+         ts_value = b_before_afterafter + 
+           `b_EnvironmentMammal:before_afterafter` + `r_Study:Time_series`) %>% 
+  select(.chain, .iteration, .draw, Environment, Time_series,
+         before_after, pop_value, ts_value) %>% 
+  separate(Time_series, into = c('Study', 'Time_series'), extra = 'merge') %>% 
+  # fix 10 names that are screwing up my code
+  mutate(Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.1Heat.Soil',
+                              'Jurburg_Microcosm.1Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.2Heat.Soil',
+                              'Jurburg_Microcosm.2Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Cip_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip.Pig_feces',
+                              'Jurburg_Pigs.Cip.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Clin_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin.Pig_feces',
+                              'Jurburg_Pigs.Clin.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Grazed',
+                              'Jurburg_Portugal.Drought.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Pristine',
+                              'Jurburg_Portugal.Drought.Pristine', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Grazed',
+                              'Jurburg_Portugal.Flood.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Pristine',
+                              'Jurburg_Portugal.Flood.Pristine', Time_series),
+         # and now fix study name
+         Study = ifelse(Time_series=='Jurburg_Microcosm.1Heat.Soil' |
+                          Time_series=='Jurburg_Microcosm.2Heat.Soil',
+                        'Jurburg_Microcosm', Study),
+         Study = ifelse(Time_series=='Jurburg_Pigs.Cip_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Cip.Pig_feces' | 
+                          Time_series=='Jurburg_Pigs.Clin_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Clin.Pig_feces',
+                        'Jurburg_Pigs', Study),
+         Study = ifelse(Time_series=='Jurburg_Portugal.Drought.Grazed' |
+                          Time_series=='Jurburg_Portugal.Drought.Pristine' | 
+                          Time_series=='Jurburg_Portugal.Flood.Grazed' |
+                          Time_series=='Jurburg_Portugal.Flood.Pristine',
+                        'Jurburg_Portugal', Study)) 
+
+# soil 
+soil_ba_ES <- alpha_q0_ba_nbinom_shape %>% 
+  spread_draws(b_before_afterafter, `b_EnvironmentSoil:before_afterafter`,
+               `r_Study:Time_series`[Time_series, term]) %>% 
+  filter(term=='before_afterafter') %>% 
+  ungroup() %>% 
+  mutate(Environment = 'Soil',
+         before_after = 'after',
+         pop_value = b_before_afterafter +
+           `b_EnvironmentSoil:before_afterafter`,
+         ts_value = b_before_afterafter +
+           `b_EnvironmentSoil:before_afterafter` + `r_Study:Time_series`) %>% 
+  select(.chain, .iteration, .draw, Environment, Time_series,
+         before_after, pop_value, ts_value) %>% 
+  separate(Time_series, into = c('Study', 'Time_series'), extra = 'merge') %>% 
+  # fix 10 names that are screwing up my code
+  mutate(Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.1Heat.Soil',
+                              'Jurburg_Microcosm.1Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Microcosm_Jurburg_Microcosm.2Heat.Soil',
+                              'Jurburg_Microcosm.2Heat.Soil', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Cip_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Cip.Pig_feces',
+                              'Jurburg_Pigs.Cip.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin_C.diff.Pig_feces',
+                              'Jurburg_Pigs.Clin_C.diff.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Pigs_Jurburg_Pigs.Clin.Pig_feces',
+                              'Jurburg_Pigs.Clin.Pig_feces', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Grazed',
+                              'Jurburg_Portugal.Drought.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Drought.Pristine',
+                              'Jurburg_Portugal.Drought.Pristine', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Grazed',
+                              'Jurburg_Portugal.Flood.Grazed', Time_series),
+         Time_series = ifelse(Time_series=='Portugal_Jurburg_Portugal.Flood.Pristine',
+                              'Jurburg_Portugal.Flood.Pristine', Time_series),
+         # and now fix study name
+         Study = ifelse(Time_series=='Jurburg_Microcosm.1Heat.Soil' |
+                          Time_series=='Jurburg_Microcosm.2Heat.Soil',
+                        'Jurburg_Microcosm', Study),
+         Study = ifelse(Time_series=='Jurburg_Pigs.Cip_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Cip.Pig_feces' | 
+                          Time_series=='Jurburg_Pigs.Clin_C.diff.Pig_feces' |
+                          Time_series=='Jurburg_Pigs.Clin.Pig_feces', 'Jurburg_Pigs', Study),
+         Study = ifelse(Time_series=='Jurburg_Portugal.Drought.Grazed' |
+                          Time_series=='Jurburg_Portugal.Drought.Pristine' | 
+                          Time_series=='Jurburg_Portugal.Flood.Grazed' |
+                          Time_series=='Jurburg_Portugal.Flood.Pristine',
+                        'Jurburg_Portugal', Study)) 
+
+study_env <- alpha_ba_dat %>% 
+  unite(filter, c(Study, Environment), remove = FALSE)
+
+ba_ES <- bind_rows(aquatic_ba_ES %>% 
+                     unite(filter, c(Study, Environment), remove = FALSE) %>% 
+                     filter(filter %in% study_env$filter),
+                   mammal_ba_ES %>% 
+                     unite(filter, c(Study, Environment), remove = FALSE) %>% 
+                     filter(filter %in% study_env$filter),
+                   soil_ba_ES %>% 
+                     unite(filter, c(Study, Environment), remove = FALSE) %>% 
+                     filter(filter %in% study_env$filter))
+
+load('~/Dropbox/1current/microbiome-disturbance/data/alpha_sf_meta.Rdata')
+
+ba_ES <- left_join(ba_ES, alpha_sf_meta)
+
+# population (fixed) effects: 
+alpha_ba_pop_ES_post <- alpha_q0_ba_nbinom_shape %>% 
+  spread_draws(., 
+               b_before_afterafter, `b_EnvironmentMammal:before_afterafter`,
+               `b_EnvironmentSoil:before_afterafter`,
+               seed = seed) 
+
+alpha_ba_ES <- tibble(ES = alpha_ba_pop_ES_post$b_before_afterafter,
+                      Environment = 'Aquatic') %>% 
+  bind_rows(tibble(ES = alpha_ba_pop_ES_post$b_before_afterafter +
+                     alpha_ba_pop_ES_post$`b_EnvironmentMammal:before_afterafter`,
+                   Environment = 'Mammal')) %>% 
+  bind_rows(tibble(ES = alpha_ba_pop_ES_post$b_before_afterafter +
+                     alpha_ba_pop_ES_post$`b_EnvironmentSoil:before_afterafter`,
+                   Environment = 'Soil'))
+
+library(ggridges)
+
+ggplot() +
+  facet_wrap(~Environment, scales = 'free_y') + 
+  geom_density_ridges_gradient(data = ba_ES,
+                          aes(x = pop_value + ts_value,
+                              y = Selective_Factor,
+                              fill = stat(quantile)
+                               ),
+                               quantiles = c(1),
+                               calc_ecdf = T,
+                               scale = 0.9,
+                               linetype = 0) +
+  geom_vline(xintercept = 0, linetype = 2) +
+  geom_vline(data = alpha_ba_ES %>% 
+               group_by(Environment) %>% 
+               summarise(ES = median(ES)),
+             aes(xintercept = ES)) +
+  geom_rect(data = alpha_ba_ES %>% 
+              group_by(Environment) %>% 
+              summarise(q97.5 = quantile(ES, prob = 0.975),
+                        q2.5 = quantile(ES, prob = 0.025)),
+            aes(ymin = -Inf, ymax = Inf,
+                xmin = q2.5, xmax = q97.5),
+            alpha = 0.2) +
+  geom_text(data = alpha_sf_meta %>% 
+              group_by(Environment, Selective_Factor) %>%
+              summarise(n_ts = n_distinct(Time_series)) %>% 
+              ungroup(),
+            aes(x=1.3, y=Selective_Factor, 
+                label=paste('n[time~series] == ', n_ts)),
+            size=2,
+            nudge_y = 0.15, parse = T) +
+  scale_fill_manual(name = '',
+                    guide = 'none',
+                    values = '#cccccc') +
+  labs(y = 'Disturbance type',
+       x = 'Response to disturbance effect size') +
+  theme_bw()
+
+ggsave('~/Dropbox/1current/Steph/revision-figures/ba_q0_disturbance_type_ES.pdf',
+       width = 290, height = 180, units = 'mm')

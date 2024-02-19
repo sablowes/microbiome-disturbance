@@ -12,7 +12,8 @@ dispersion <- read.delim('/data/idiv_chase/sablowes/steph_micro/data/dispersions
 
 # some studies don't have a post-disturbance sample 'soon enough' following the perturbation
 # to be useful for this question
-studies2omit <- tibble(Study = c('Wu', 'Ho', 'Flancman', 'Jurburg_Portugal', 'Kennedy', 'Lu'))
+studies2omit <- tibble(Study = c('Wu', 'Ho', 'Flancman', 'Jurburg_Portugal', 
+                                 'Kennedy', 'Lu'))
 
 # add before_after covariate for modelling immediate response to disturbance
 dispersion <- dispersion %>% 
@@ -20,10 +21,12 @@ dispersion <- dispersion %>%
                                ifelse(Rank==2, 'after', NA)))
 
 # set before as reference level (this'll make it the intercept, with after the slope)
-dispersion$before_after <- factor(dispersion$before_after, levels = c('before', 'after'))
+dispersion$before_after <- factor(dispersion$before_after, 
+                                  levels = c('before', 'after'))
 
 
-disp_before_after_phi <- brm(bf(value ~ Environment * before_after + (before_after | Study / Time_series),
+disp_before_after_phi <- brm(bf(value ~ Environment * before_after + 
+                                  (before_after | Study / Time_series),
                                 phi ~ 1 + (1 | Study)),
                          family = Beta(),
                          data = dispersion %>% 

@@ -21,7 +21,8 @@ needed_libs <- c("brms",
                  "cowplot",
                  "tidyverse",
                  "devtools",
-                 "tidybayes"
+                 "tidybayes",
+                 "ggridges"
 )
 
 usePackage <- function(p) {

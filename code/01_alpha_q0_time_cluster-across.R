@@ -7,7 +7,7 @@ library(dplyr)
 library(tidyr)
 
 # the data
-alpha <- read.delim('/data/idiv_chase/sablowes/steph_micro/data/Rich-across.txt',
+alpha <- read.delim('/data/idiv_chase/sablowes/steph_micro/data/Rich.txt',
                          sep = " ") %>% 
   as_tibble() 
 
