@@ -229,3 +229,49 @@ ggplot() +
 ggsave('~/Dropbox/1current/Steph/revision-figures/time_q0_disturbance_type_ES.pdf',
        width = 290, height = 180, units = 'mm')
 
+# es (forest) plot for each time series
+time_ES %>% 
+  ggplot() +
+  facet_wrap(~Environment, scales = 'free') +
+  geom_hline(yintercept = 0, lty = 2) + 
+  stat_summary(aes(x = Time_series,
+                   y = pop_value + ts_value),
+               fun = 'median',
+               fun.max = function(x) quantile(x, probs = 0.975),
+               fun.min = function(x) quantile(x, probs = 0.025)) +
+  labs(x = 'Time series ID',
+       y = 'Richness effect size (response following disturbance)') +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.text.y = element_blank())
+
+ggsave('~/Dropbox/1current/Steph/revision-figures/richness_t50_ES-per-ts.pdf',
+       width = 290, height = 180, units = 'mm')
+
+# table for counts of directional (and no) trends
+richness_t50_table <-
+  time_ES %>% 
+  mutate(es = pop_value + ts_value) %>% 
+  group_by(Environment, Study, Time_series) %>% 
+  summarise(median_es = median(es),
+            q97.5 = quantile(es, probs = 0.975),
+            q2.5 = quantile(es, probs = 0.025)) %>% 
+  ungroup() %>% 
+  mutate(qual_change = case_when(q2.5 > 0 & q97.5 > 0 ~ 'up',
+                                 q2.5 < 0 & q97.5 > 0 ~ 'neutral',
+                                 q2.5 < 0 & q97.5 < 0 ~ 'down')) %>% 
+  group_by(Environment, qual_change) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  complete(Environment, qual_change,
+           fill = list(n = 0)) %>%   
+  mutate(metric = 'Richness',
+         ba_or_time = 'time')
+
+# put all the tables together and save as csv
+bind_rows(richness_ba_table,
+          richness_t50_table,
+          dispersion_ba_table,
+          dispersion_t50_table,
+          turnover_t50_table) %>% 
+  write_csv('~/Dropbox/1current/Steph/revision-figures/es-counts.csv')

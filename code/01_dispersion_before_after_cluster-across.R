@@ -25,8 +25,8 @@ dispersion$before_after <- factor(dispersion$before_after,
                                   levels = c('before', 'after'))
 
 
-disp_before_after_phi <- brm(bf(value ~ Environment * before_after + 
-                                  (before_after | Study / Time_series),
+disp_before_after_phi <- brm(bf(value ~ Environment * before_after + (1 | Study) + 
+                                  (before_after | Study:Time_series),
                                 phi ~ 1 + (1 | Study)),
                          family = Beta(),
                          data = dispersion %>% 
