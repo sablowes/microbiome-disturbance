@@ -61,6 +61,10 @@ Files in the code folder include:
 
 **04_**: scripts to wrangle and visually inspect models fit to the different data standardisations
 
+**05_**: script to wrangle meta data for plotting effect sizes with different disturbance categories
+
+**06_**: scripts to wrangle and plot figures, and create tables, for time series level effect size estimates
+
 ## Results
 
 There are two results folders, one each for models fit to the different standardisations.
